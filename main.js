@@ -3,6 +3,37 @@ var fs = require('fs');
 var url = require('url'); //모듈들 받아옴.
 var qs = require('querystring');
 
+var template = {
+  HTML: function(title, list, body, control){
+    return `
+      <!doctype html>
+      <html>
+      <head>
+        <title>Notice borad - ${title}</title>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1><a href="/">Notice board</a></h1>
+        ${list}
+        ${control}
+        ${body}
+      </body>
+      </html>
+    `
+  },
+  list:function(filelist){
+    var list = '<ul>';
+    let i = 0;
+    while(i < filelist.length){
+      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+  
+      i = i + 1;
+    }
+    list = list + '</ul>';
+    return list;
+  }
+}
+
 
 function templateHTML(title, list, body, control){
   return `
@@ -43,17 +74,25 @@ var app = http.createServer(function(request,response){
         fs.readdir('./data', function(error, filelist){
           var title = "Welcome To Oh's Notice board"
           var data = "Hello world, This is my own Notice board :D"
+          /*
           var list = templateList(filelist);
           var template = templateHTML(title, list, `<h2>${title}</h2>${data}`, `<a href="/create">Create</a>`);
           response.writeHead(200);
           response.end(template);
+          */
+
+         var list = template.list(filelist);
+         var html = template.HTML(title, list, `<h2>${title}</h2>${data}`, `<a href="/create">Create</a>`);
+         response.writeHead(200);
+         response.end(html);
+
         })
       } else{
         fs.readdir('./data', function(error, filelist){
           fs.readFile(`data/${queryData.id}`, 'utf8', (err, data) => {
             let title = queryData.id;
-            var list = templateList(filelist);
-            var template = templateHTML(title, list, `<h2>${title}</h2>${data}`, `
+            var list = template.list(filelist);
+            var html = template.HTML(title, list, `<h2>${title}</h2>${data}`, `
             <a href="/create">Create</a> 
             <a href="/update?id=${title}">Update</a> 
             <form action="/delete_process" method="post">
@@ -62,15 +101,15 @@ var app = http.createServer(function(request,response){
             </form>
             `);
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
           });
         })
       }
     } else if (pathname === '/create') {
       fs.readdir('./data', function(error, filelist){
         var title = "WEB -Create"
-        var list = templateList(filelist);
-        var template = templateHTML(title, list, `
+        var list = template.list(filelist);
+        var html = template.HTML(title, list, `
         <form action="/create_process" method="post">
           <p>
               <input type="text" name="title" placeholder="Title">
@@ -84,7 +123,7 @@ var app = http.createServer(function(request,response){
         </form>
         `, `Create`);
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       })
     } else if (pathname === '/create_process'){
       var body = '';
@@ -104,8 +143,8 @@ var app = http.createServer(function(request,response){
       fs.readdir('./data', function(error, filelist){
         fs.readFile(`data/${queryData.id}`, 'utf8', (err, data) => {
           let title = queryData.id;
-          var list = templateList(filelist);
-          var template = templateHTML(title, list, 
+          var list = template.list(filelist);
+          var html = template.HTML(title, list, 
             `
             <form action="/update_process" method="post">
               <input type="hidden" name="id" value="${title}">
@@ -122,7 +161,7 @@ var app = http.createServer(function(request,response){
             `,
            `<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>`);
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
         });
       })
     } else if(pathname === '/update_process'){
