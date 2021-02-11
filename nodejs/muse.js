@@ -1,0 +1,11 @@
+//var M = {
+//    v:'v',
+//    f:function(){
+//        console.log(this.v);
+//    }
+//}
+//M.f();
+
+
+varpart = require('./mpart.js');
+parent.f()

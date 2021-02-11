@@ -3,67 +3,10 @@ var fs = require('fs');
 var url = require('url'); //모듈들 받아옴.
 var qs = require('querystring');
 
-var template = {
-  HTML: function(title, list, body, control){
-    return `
-      <!doctype html>
-      <html>
-      <head>
-        <title>Notice borad - ${title}</title>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <h1><a href="/">Notice board</a></h1>
-        ${list}
-        ${control}
-        ${body}
-      </body>
-      </html>
-    `
-  },
-  list:function(filelist){
-    var list = '<ul>';
-    let i = 0;
-    while(i < filelist.length){
-      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-  
-      i = i + 1;
-    }
-    list = list + '</ul>';
-    return list;
-  }
-}
+
+var template = require('./lib/template.js');
 
 
-function templateHTML(title, list, body, control){
-  return `
-    <!doctype html>
-    <html>
-    <head>
-      <title>Notice borad - ${title}</title>
-      <meta charset="utf-8">
-    </head>
-    <body>
-      <h1><a href="/">Notice board</a></h1>
-      ${list}
-      ${control}
-      ${body}
-    </body>
-    </html>
-  `
-};
-
-function templateList(filelist){
-  var list = '<ul>';
-  let i = 0;
-  while(i < filelist.length){
-    list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-
-    i = i + 1;
-  }
-  list = list + '</ul>';
-  return list;
-}
 
 var app = http.createServer(function(request,response){
     var _url = request.url;
@@ -72,7 +15,7 @@ var app = http.createServer(function(request,response){
     if(pathname === "/"){
       if(queryData.id === undefined){
         fs.readdir('./data', function(error, filelist){
-          var title = "Welcome To Oh's Notice board"
+          var title = "Welcome To Oh's Notice Board"
           var data = "Hello world, This is my own Notice board :D"
           /*
           var list = templateList(filelist);
@@ -89,7 +32,8 @@ var app = http.createServer(function(request,response){
         })
       } else{
         fs.readdir('./data', function(error, filelist){
-          fs.readFile(`data/${queryData.id}`, 'utf8', (err, data) => {
+          var filteredId = path.parse(queryData.id).base;   // ../ 이걸이용해서 내 컴퓨터 파일을 뒤지는 걸 막기위한 작업. 보안을 위한 작업.
+          fs.readFile(`data/${filteredId}`, 'utf8', (err, data) => {
             let title = queryData.id;
             var list = template.list(filelist);
             var html = template.HTML(title, list, `<h2>${title}</h2>${data}`, `
@@ -141,7 +85,8 @@ var app = http.createServer(function(request,response){
       });
     } else if(pathname === '/update'){
       fs.readdir('./data', function(error, filelist){
-        fs.readFile(`data/${queryData.id}`, 'utf8', (err, data) => {
+        var filteredId = path.parse(queryData.id).base;
+        fs.readFile(`data/${filteredId}`, 'utf8', (err, data) => {
           let title = queryData.id;
           var list = template.list(filelist);
           var html = template.HTML(title, list, 
@@ -189,7 +134,8 @@ var app = http.createServer(function(request,response){
       request.on('end', function(error){
         var post = qs.parse(body);
         var id = post.id;
-        fs.unlinkSync(`data/${id}`);
+        var filteredId = path.parse(id).base;
+        fs.unlinkSync(`data/${filteredId}`);
         response.writeHead(302, {Location: `/`});    //301은 페이지가 완전히 다른 주소로 바뀌었다는 말, 302는 이동하라는 뜻. redirection하는줄
         response.end();
       })
